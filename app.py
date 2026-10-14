@@ -271,29 +271,39 @@ def metric_rows(model):
     )
 
 
-def show_model(model, title, size=3.6):
+def show_model(model, title, view, size=3.6):
+    """One strategy: map, metrics, fill levels, queue, history.
+
+    `view` and `title` are part of every table key, so the tables of the two
+    strategies never share an element when Compare shows both of them.
+    """
     st.markdown(f"**{title}**")
     st.pyplot(draw_map(model, size), width="stretch")
 
     st.markdown("##### Metrics")
-    st.dataframe(metric_rows(model), hide_index=True, width="stretch")
+    st.dataframe(metric_rows(model), hide_index=True, width="stretch",
+                 column_order=["metric", "value"], key=f"metrics_{view}_{title}")
 
     st.markdown("##### Fill levels")
-    st.dataframe(fill_table(model), hide_index=True, width="stretch", height=230)
+    st.dataframe(fill_table(model), hide_index=True, width="stretch", height=230,
+                 column_order=["bin", "level", "state"], key=f"fill_{view}_{title}")
 
     st.markdown("##### Request queue")
     queue = queue_table(model)
     if queue.empty:
         st.caption("Empty - no bin is waiting for a truck.")
     else:
-        st.dataframe(queue, hide_index=True, width="stretch", height=160)
+        st.dataframe(queue, hide_index=True, width="stretch", height=160,
+                     column_order=["bin", "level", "waiting"], key=f"queue_{view}_{title}")
 
     st.markdown("##### Collection history")
     history = history_table(model)
     if history.empty:
         st.caption("No pickup yet.")
     else:
-        st.dataframe(history, hide_index=True, width="stretch", height=180)
+        st.dataframe(history, hide_index=True, width="stretch", height=180,
+                     column_order=["step", "bin", "units", "wait"],
+                     key=f"history_{view}_{title}")
 
 
 # --------------------------------------------------------------------------
@@ -356,7 +366,9 @@ def show_results_tab():
                                f"{rows['unserved_requests'].mean():,.2f}",
                                f"{rows['mean_queue_length'].mean():,.2f}",
                                f"{rows['net_bin_fill_change'].mean():+,.1f}"]
-        st.dataframe(table, hide_index=True, width="stretch")
+        st.dataframe(table, hide_index=True, width="stretch",
+                     column_order=["metric", "baseline", "smart"],
+                     key=f"duration_{level}_{duration}")
 
     with st.expander("Transient vs steady state"):
         st.write(
@@ -424,9 +436,10 @@ with tab_simulation:
 
     if VIEW_LABELS[view] == "compare":
         for title, key in (("Smart", "smart"), ("Baseline", "baseline")):
-            show_model(models[key], title)
+            show_model(models[key], title, view)
     else:
-        show_model(models[VIEW_LABELS[view]], VIEW_LABELS[view].capitalize())
+        strategy = VIEW_LABELS[view]
+        show_model(models[strategy], strategy.capitalize(), view)
 
     if st.session_state.playing and not models["smart"].is_done:
         time.sleep(play_delay(speed))
