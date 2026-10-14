@@ -116,6 +116,80 @@ def play_delay(speed):
 # the map
 # --------------------------------------------------------------------------
 
+# The map legend, in one place. Both the map and the How it works tab read
+# this list, so the two can never drift apart.
+# (label, colour, shape cue) - the shape cue is what sits on the colour.
+LEGEND = [
+    ("normal", STATUS_COLOURS[BinStatus.NORMAL], None),
+    ("nearly full", STATUS_COLOURS[BinStatus.NEARLY_FULL], "bar"),
+    ("request", STATUS_COLOURS[BinStatus.REQUESTING], "line"),
+    ("full", STATUS_COLOURS[BinStatus.FULL], "cross"),
+    ("alert", ALERT_COLOUR, "alert"),
+    ("truck", TRUCK_COLOUR, None),
+    ("depot", None, None),  # outlined square
+]
+
+LEGEND_COLUMNS = 4
+
+
+def _column_major(entries, columns):
+    """Reorder entries for a matplotlib legend.
+
+    matplotlib fills a legend column by column, so a plain list comes out as
+    the wrong reading order. This puts the entries back into the order a
+    reader expects: left to right, then the next line.
+    """
+    rows = -(-len(entries) // columns)
+    ordered = [None] * len(entries)
+    for index, entry in enumerate(entries):
+        row, column = divmod(index, columns)
+        ordered[column * rows + row] = entry
+    return ordered
+
+
+def _legend_handles():
+    """One matplotlib handle per legend entry, in the same order as the
+    labels that go with them."""
+    handles, labels = [], []
+    for label, colour, cue in _column_major(LEGEND, LEGEND_COLUMNS):
+        if cue == "alert":
+            handles.append((plt.Rectangle((0, 0), 1, 1, facecolor=colour, edgecolor="none"),
+                            Line2D([0], [0], marker="^", color=BACKGROUND, markersize=6,
+                                   linestyle="none")))
+        elif colour is None:  # depot: an outlined square
+            handles.append(plt.Rectangle((0, 0), 1, 1, facecolor="none",
+                                         edgecolor=TRUCK_COLOUR, linewidth=1.5))
+        elif colour == TRUCK_COLOUR:
+            handles.append(plt.Circle((0, 0), 0.5, facecolor=TRUCK_COLOUR))
+        else:
+            marker = {None: None, "bar": "_", "line": "|", "cross": "x"}[cue]
+            handles.append((plt.Rectangle((0, 0), 1, 1, facecolor=colour, edgecolor="none"),
+                            Line2D([0], [0], marker=marker, color=BACKGROUND,
+                                   markerfacecolor=BACKGROUND, markersize=6,
+                                   linestyle="none")))
+        labels.append(label)
+    return handles, labels
+
+
+def draw_key(size=3.6):
+    """The legend on its own, for the How it works tab.
+
+    Drawn by the same code as the map legend, so the guide cannot describe a
+    map that looks different from the real one.
+    """
+    figure, axes = plt.subplots(figsize=(size, 1.1))
+    figure.patch.set_facecolor(BACKGROUND)
+    axes.set_facecolor(BACKGROUND)
+    axes.axis("off")
+    axes.legend(*_legend_handles(), loc="center", ncol=LEGEND_COLUMNS, fontsize=8,
+                frameon=False, handlelength=1.1, handleheight=1.1, handletextpad=0.35,
+                columnspacing=0.9, labelspacing=0.35, borderpad=0.0,
+                handler_map={tuple: HandlerTuple(ndivide=None, pad=0.1)})
+    figure.tight_layout(pad=0.1)
+    return figure
+
+# --------------------------------------------------------------------------
+
 
 def draw_marker(ax, centre, kind, colour):
     """Draw the shape that goes on top of a coloured cell."""
@@ -179,35 +253,11 @@ def draw_map(model, size=3.6):
 
 
 def _draw_legend(axes):
-    """A legend under the grid, using the same shapes as the map itself.
-
-    matplotlib lays the entries out, so the labels never overlap, and each
-    coloured square carries the same marker as the cell it stands for.
-    """
-    marker_for = {None: None, "bar": "_", "line": "|", "cross": "x", "alert": "^"}
-
-    def cell(colour, marker):
-        """A coloured square with the same marker the cell carries."""
-        return (plt.Rectangle((0, 0), 1, 1, facecolor=colour, edgecolor="none"),
-                Line2D([0], [0], marker=marker_for[marker], color=BACKGROUND,
-                       markerfacecolor=BACKGROUND, markersize=6, linestyle="none"))
-
-    # matplotlib fills a legend column by column, so the entries are handed
-    # over in an interleaved order to make the two rows read left to right.
-    handles = [cell(STATUS_COLOURS[BinStatus.NORMAL], None),
-               cell(ALERT_COLOUR, "alert"),
-               cell(STATUS_COLOURS[BinStatus.NEARLY_FULL], "bar"),
-               plt.Circle((0, 0), 0.5, facecolor=TRUCK_COLOUR),
-               cell(STATUS_COLOURS[BinStatus.REQUESTING], "line"),
-               plt.Rectangle((0, 0), 1, 1, facecolor="none", edgecolor=TRUCK_COLOUR,
-                             linewidth=1.5),
-               cell(STATUS_COLOURS[BinStatus.FULL], "cross")]
-    labels = ["normal", "alert", "nearly full", "truck", "request", "depot", "full"]
-
-    axes.legend(handles, labels, loc="lower center", bbox_to_anchor=(0.5, 0.0),
-                ncol=4, fontsize=7, frameon=False, handlelength=1.1, handleheight=1.1,
-                handletextpad=0.35, columnspacing=0.9, labelspacing=0.35,
-                borderpad=0.0,
+    """A legend under the grid, using the same shapes as the map itself."""
+    axes.legend(*_legend_handles(), loc="lower center", bbox_to_anchor=(0.5, 0.0),
+                ncol=LEGEND_COLUMNS, fontsize=7, frameon=False, handlelength=1.1,
+                handleheight=1.1, handletextpad=0.35, columnspacing=0.9,
+                labelspacing=0.35, borderpad=0.0,
                 handler_map={tuple: HandlerTuple(ndivide=None, pad=0.1)})
 
 
@@ -306,6 +356,72 @@ def show_model(model, title, view, size=3.6):
                      key=f"history_{view}_{title}")
 
 
+
+def show_guide_tab():
+    """A first tab for somebody opening the page with nobody to explain it."""
+    st.markdown("##### What this is")
+    st.write(
+        "This page runs a simulation of a city full of waste bins and collection trucks. "
+        "It lets you watch two ways of doing the same work - a fixed round through the "
+        "city, or a dispatcher that sends trucks where they are needed - and compare them."
+    )
+
+    st.markdown("##### The three kinds of agent")
+    st.write(
+        "- **Bin** - watches the waste dropping into it and its own temperature. "
+        "Decides when to ask for a collection, and warns when it gets too hot.\n"
+        "- **Collector (truck)** - watches where it is, how full it is, and which bin it "
+        "was sent to. Decides whether to drive on, load up, or go back to the depot.\n"
+        "- **Dispatcher** - watches which bins are asking and where the free trucks are. "
+        "Decides which truck goes to which bin, fullest bin first."
+    )
+
+    st.markdown("##### Try it in three steps")
+    st.write(
+        "1. Open the **Simulation** tab. Leave it on medium load and seed 1000.\n"
+        "2. Set the view to **Compare**, so both strategies run on the same city.\n"
+        "3. Press **Play** and watch the Metrics table under each map."
+    )
+    st.caption("What to look at: Distance (cells) and Avg wait (steps). The fixed route "
+               "drives far more and bins wait much longer, because it drives past bins "
+               "that did not ask for anything yet.")
+
+    st.markdown("##### Reading the map")
+    st.pyplot(draw_key(), width="stretch")
+    st.caption("Every state has a shape as well as a colour, so the map still reads "
+               "without colour. The white triangle on a bin means a safety alert: the bin "
+               "is too hot and no truck will empty it until the alert clears.")
+
+    with st.expander("What each metric means"):
+        st.write(
+            "- **Overflow (episodes)** - how often a bin first reached 100% and started "
+            "spilling. Counted once per fill-up, not every step after.\n"
+            "- **Uncontained (units)** - waste that no longer fitted into a full bin and "
+            "stayed on the street.\n"
+            "- **Distance (cells)** - how far all three trucks drove in total.\n"
+            "- **Avg wait (steps)** - how long a bin waited, from crossing the collection "
+            "threshold to the pickup that emptied it.\n"
+            "- **Unserved (bins)** - bins still waiting for a truck when the day ended."
+        )
+
+    with st.expander("What the results actually show"):
+        st.write(
+            "Over a single day the dispatcher looks clearly better: no spills, much "
+            "shorter waiting and far less driving, because it only leaves the depot when "
+            "a bin really needs emptying. That is the honest result for short runs at low "
+            "or medium load.\n\n"
+            "It does not hold under sustained high load. Run over three days instead of "
+            "one, the dispatcher spills more often than the fixed route, because then "
+            "every bin is asking at once and there are not enough trucks. Both facts come "
+            "from 20 generated days, and the **Results** tab has the charts and the "
+            "duration sweep that show this."
+        )
+
+    st.markdown("##### Where the code is")
+    st.write("[github.com/unifyWeb3/smartbin](https://github.com/unifyWeb3/smartbin) - "
+             "the simulation, the experiment script and the staged checks.")
+
+
 # --------------------------------------------------------------------------
 # results tab
 # --------------------------------------------------------------------------
@@ -387,9 +503,15 @@ def show_results_tab():
 st.markdown("### Smart waste bins")
 st.caption("Mesa 3 - 20x20 grid, 30 bins, 3 trucks, 1 depot")
 
-tab_simulation, tab_results = st.tabs(["Simulation", "Results"])
+tab_guide, tab_simulation, tab_results = st.tabs(
+    ["How it works", "Simulation", "Results"]
+)
+
+with tab_guide:
+    show_guide_tab()
 
 with tab_simulation:
+    st.caption("New here? Read How it works first.")
     view = st.segmented_control(
         "View", list(VIEW_LABELS), default="Compare",
         help="Both strategies always run on the same scenario; this only changes what is shown.",
