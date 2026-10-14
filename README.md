@@ -323,9 +323,11 @@ survive:
 
 **The dispatcher's perfect record at 130 % is a transient.** It holds for
 one day and is gone by the third, where every single scenario spills. The
-same thing happens one level lower: at 100 % the dispatcher is still clean
-after 900 steps (0 overflow episodes against the baseline's 19.25) but
-spills by 1800 steps (90.00 against 80.45).
+same pattern appears one level lower. At 100 % the dispatcher is clean
+after 300 steps (0.00 overflow episodes against the baseline's 1.70). After
+900 steps it averages 8.55 overflow episodes against the baseline's 19.25,
+and 7 of its 20 scenarios have already spilled. After 1800 steps it averages
+90.00 against the baseline's 80.45.
 
 **What one day does show.** It shows the transient honestly: which
 strategy reacts first, how quickly a request is answered once a truck is
