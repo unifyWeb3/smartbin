@@ -1,0 +1,17 @@
+# Pinned to the versions this project was built and tested with
+# (.venv: Python 3.14.4).
+#
+# Only what app.py and the model code import. run_experiment.py needs
+# nothing beyond this list as well. ortools is not used anywhere.
+
+mesa==3.5.1
+streamlit==1.65.0
+pandas==3.0.6
+matplotlib==3.11.2
+
+# networkx is not imported by this project, but mesa 3.5.1 does NOT declare
+# it as a dependency (it is only in mesa's "network" and "all" extras) even
+# though `import mesa` loads mesa.discrete_space.network, which does
+# `import networkx`. Without this line the app fails to start with
+# ModuleNotFoundError: No module named 'networkx'.
+networkx==3.7

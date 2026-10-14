@@ -1,0 +1,15 @@
+# Theme for the dashboard (streamlit run app.py).
+#
+# One neutral background, one accent colour, colour reserved for bin status.
+# There is no styling in app.py - everything visual comes from here.
+
+[theme]
+base = "light"
+primaryColor = "#17557A"        # the single accent colour
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F2F2EF"
+textColor = "#1A1A1A"
+font = "sans serif"
+
+[server]
+headless = true

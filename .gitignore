@@ -1,0 +1,11 @@
+# the local virtual environment
+.venv/
+
+# python bytecode
+__pycache__/
+*.pyc
+
+# Streamlit secrets belong in the Cloud dashboard, never in the repository
+.streamlit/secrets.toml
+
+# .streamlit/config.toml IS committed on purpose - it is the theme.
