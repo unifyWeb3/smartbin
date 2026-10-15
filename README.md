@@ -1,4 +1,4 @@
-# Smart waste bin simulation
+# Agent-Based Smart Waste Collection and Route Optimization System
 
 A multi-agent simulation of a city with smart waste bins, built with
 [Mesa 3.x](https://mesa.readthedocs.io/). Two collection strategies are

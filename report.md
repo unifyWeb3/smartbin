@@ -19,17 +19,23 @@ figcaption { font-size: 9pt; color: #444444; }
 img { max-width: 100%; }
 </style>
 
-# Design and Implementation of an Agent-Based Smart Waste Bin Management System
+# Agent-Based Smart Waste Collection and Route Optimization System
 
 ## Abstract
 
-This project builds an agent-based simulation of urban waste collection in Python with Mesa 3. Two collection strategies run on identical pre-generated scenarios: a fixed route each truck drives, and a dispatcher that sends the nearest free truck to the fullest bin. Thirty bins, three trucks and one central depot fill and empty over repeated days at seven load levels. Staged checks on single agents, and two identities asserted on every run, verify the behaviour; one is a mass balance proving no waste is lost or created. Over one day at 40 to 130 percent of a never-idle capacity estimate, the dispatcher produces no overflow, drives about half as far as the fixed route and cuts waiting fivefold. Over six days at 130 percent it overflows more often. A live dashboard steps through both strategies side by side.
+This project builds an agent-based simulation of urban waste collection in Python with Mesa 3 and tests dispatch optimization against a fixed-route baseline: which bin is served, by which truck, and in what order. Thirty bins, three trucks and one central depot fill and empty over repeated days at seven load levels. Staged checks on single agents, and two identities asserted on every run, verify the behaviour; one is a mass balance proving no waste is lost or created. Over one day at 40 to 130 percent of a never-idle capacity estimate, the dispatcher produces no overflow, drives about half as far as the fixed route and cuts waiting fivefold. Over six days at 130 percent it overflows more often. A live dashboard steps through both strategies side by side.
 
 ## 1. Introduction
 
 Waste bins fill at different rates depending on where they stand, and collection vehicles have limited capacity and limited time. Scheduling the two against each other is the problem this project addresses: deciding which bin to empty next, and which vehicle should do it.
 
 The objective is to build a simulation in which the effect of that decision can be measured rather than argued about. The system contains 30 waste bins on a 20 by 20 grid, three collection trucks and one depot. Two strategies are compared on exactly the same waste, in exactly the same order, over the same days: a baseline in which each truck follows a fixed round through the city and empties whatever it finds, and a smart strategy in which a central dispatcher sends the nearest free truck to whichever bin needs emptying most. The project asks which strategy wastes less, which serves people faster, and under what conditions each one fails.
+
+### Scope of route optimization
+
+The optimization tested here is **dispatch optimization**, not route optimization in the vehicle-routing sense. The dispatcher decides three things: which bin is served, which truck serves it, and in what order the queue is worked - fullest bin first, nearest free truck first. That decision is compared against the fixed-route baseline on three measures: total distance driven, waiting time before a bin is emptied, and overflow when a bin reaches 100 percent.
+
+No multi-stop route planning is performed. The smart strategy averages **1.00 bins per trip** at the reference load, against **1.07 ± 0.05** for the baseline, because a truck holds 20 units and a bin at the 90 unit collection threshold offers exactly one full load. One visit fills the truck, so there is never a choice between chaining several bins into one trip and going straight to the depot. The savings this report measures come from not driving at all when no bin needs emptying, not from sequencing a tour more cleverly. Multi-stop routing with larger trucks, where a single trip could serve several bins in an order chosen for distance, is future work and is listed as such in the conclusion.
 
 ## 2. Background
 
@@ -299,9 +305,11 @@ Utilisation climbs with duration at every load level. At 130 percent the dispatc
 
 ## 9. Conclusion and future work
 
-The system was built and measured. Over one day at 40 to 130 percent of a never-idle capacity estimate, the dispatcher causes no overflow and no uncontained waste, drives about half as far as the fixed route, and cuts the average wait from 43.23 steps to 8.07. Under sustained high load, over three or six days, it overflows more often than the fixed route and leaves a larger backlog. The fixed route wins on unserved requests and on bins per trip, but both of those metrics reward indiscriminate emptying rather than urgent service. The never-idle capacity estimate describes the baseline almost exactly and overstates the dispatcher by 49 percent, because a dispatcher that waits is not operating at capacity.
+The system was built and measured. The optimization tested was **dispatch optimization**: which bin is served, by which truck, and in what order, against a fixed-route baseline. Over one day at 40 to 130 percent of a never-idle capacity estimate, the dispatcher causes no overflow and no uncontained waste, drives about half as far as the fixed route, and cuts the average wait from 43.23 steps to 8.07. Under sustained high load, over three or six days, it overflows more often than the fixed route and leaves a larger backlog. The fixed route wins on unserved requests and on bins per trip, but both of those metrics reward indiscriminate emptying rather than urgent service. The never-idle capacity estimate describes the baseline almost exactly and overstates the dispatcher by 49 percent, because a dispatcher that waits is not operating at capacity.
 
-Three pieces of future work follow directly from the results.
+Four pieces of future work follow directly from the results.
+
+**Extend the work from dispatch to route optimization.** Section 1 states the scope: what was tested is dispatch optimization, and a trip covers 1.00 bins because one bin fills a 20 unit truck. A truck large enough to carry several full pickups would make multi-stop route planning possible, and the order in which it chains those bins could be optimised for distance rather than for fullness. That is the missing half of the title, and it needs a different truck capacity, a different objective and a different metric, because bins per trip would stop being pinned at 1.00.
 
 **Lower the collection threshold as a test of the overflow explanation.** Section 7 offers a likely explanation for the reversal under sustained load: the dispatcher ignores any bin below 90 units, so under heavy load the threshold stops discriminating between urgent and non-urgent bins. Lowering the request threshold from 90 to, say, 70 would give the dispatcher more frequent, smaller jobs and let it rotate across the city more evenly. If the explanation is right, overflow episodes under sustained high load should fall relative to the baseline. If they do not, the explanation is wrong and the cause is elsewhere. This experiment is cheap to run with the existing sweep, and it turns a conjecture into a testable claim.
 

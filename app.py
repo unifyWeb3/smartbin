@@ -361,9 +361,9 @@ def show_guide_tab():
     """A first tab for somebody opening the page with nobody to explain it."""
     st.markdown("##### What this is")
     st.write(
-        "This page runs a simulation of a city full of waste bins and collection trucks. "
-        "It lets you watch two ways of doing the same work - a fixed round through the "
-        "city, or a dispatcher that sends trucks where they are needed - and compare them."
+        "This page runs a simulation of a city full of waste bins and collection trucks, and "
+        "tests dispatch optimization - which bin is served, by which truck, and in what order "
+        "- against a fixed round through the city, so you can watch the two side by side."
     )
 
     st.markdown("##### The three kinds of agent")
