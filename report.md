@@ -330,12 +330,12 @@ The dashboard needs `results_duration.csv` and the chart images to populate its 
 
 ### Screenshots
 
-Phone screenshots to be added here.
+Four views of the live dashboard at <https://smartbinn.streamlit.app/>.
 
-[screenshot: dashboard - the "How it works" tab on a phone]
+![The Simulation tab in the Smart view: bins coloured and marked by state, the legend under the grid naming every state, and truck 2 parked on the outlined depot at the start of the day.](screenshots/Screenshot_20261015_080240_Mises.png){#fig:shot-smart}
 
-[screenshot: dashboard - Compare view, the two strategy maps stacked]
+![The same city at the same step under the Baseline strategy. Only the truck differs: truck 3 sits on the depot, because the baseline follows a fixed route rather than answering requests.](screenshots/Screenshot_20261015_080252_Mises.png){#fig:shot-baseline}
 
-[screenshot: dashboard - live metrics, request queue and collection history]
+![The tables below the map at step 0: the five headline metrics all read zero, the fill levels are listed fullest first, and the request queue and collection history show their empty states.](screenshots/Screenshot_20261015_080301_Mises.png){#fig:shot-tables}
 
-[screenshot: dashboard - Results tab with the load sweep charts]
+![The Results tab with the overflow-episode chart: the dispatcher is clean up to the 130 % level and above the fixed route beyond it, with the duration sweep and the transient note in the collapsed panels below.](screenshots/Screenshot_20261015_080311_Mises.png){#fig:shot-results}
